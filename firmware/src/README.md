@@ -1,67 +1,51 @@
+# Lasersaur-RAMPS
 
-Lasersaur - Open Source Laser cutter
--------------------------------------
+This is an **experimental** fork of [LasaurApp](http://www.lasersaur.com) that
+modifies the firmware file to allow it to work with a
+[RAMPS](http://reprap.org/wiki/RAMPS_1.4) style driver board.
 
-This is the firmware we use for the Lasersaur. It's a slightly modified version of grbl. It's what runs on an Arduino Uno and takes g-code files to controls the stepper motors accordingly.
+## DISCLAIMER
 
-How to get this firmware onto an Arduino Uno? There is a python script that will do the trick. Edit the "flash.py" and follow the instruction in it. You will need a USB cable and the Arduino IDE.
+This is a highly experimental fork.  In fact, it would be fair to consider it
+entirely untested, as I don't currently own a laser cutter.  Any liability for
+running dangerous lasers with untested firmware is your own, and this software
+comes with no guarantees whatsoever. All information is provided as-is and
+without claims to mechanical or electrical fitness, safety, or usefulness. You
+are fully responsible for doing your own evaluations and making sure your system
+does not burn, blind, or electrocute people.
 
-For more information see the [Lasersaur Software Setup Guide](http://www.lasersaur.com/manual/software_setup).
+## Who is this for?
 
-**DISCLAIMER:** Please be aware that operating a DIY laser cutter can be dangerous and requires full awareness of the risks involved. You build the machine and you will have to make sure it is safe. The instructions of the Lasersaur project and related software come without any warranty or guarantees whatsoever. All information is provided as-is and without claims to mechanical or electrical fitness, safety, or usefulness. You are fully responsible for doing your own evaluations and making sure your system does not burn, blind, or electrocute people.
+Mike.  Although, if you, like Mike, have a custom laser table with hardware that
+does not play nice with lasersaur - such as a RAMPS board and an ATMega2560, you
+might want to take a look as well.
 
+## Details
 
-Grbl - An embedded g-code interpreter and motion-controller for the Arduino/AVR328 microcontroller
---------------
+Only the firmware has been modified in this fork.  Lasersaur's firmware is based
+on a firmware called [grbl](http://github.com/grbl/grbl), though the two have
+diverged quite a bit since lasersaur first forked. several years ago.  One thing
+both firmwares still shared, however, was an assumption that certain pins - such
+as the stepping pins, sense pins, and direction pins, were grouped together on a
+port by type.  That is, all the stepping pins were together in the same 8-bit
+address.  RAMPS boards, however, have pins more spread out in order to minimize
+the impact to specialty pins such as PWM pins that might have other uses.  This
+means they are not grouped together neatly.  So I modified the lasersaur code to
+use more generic pin definitions, and to work with individual pins rather than
+blocking them together in ports.  This has the added benefit of removing some
+odd interlocking dependencies between board versions and sensors, so you are now
+free to mix-and-match features, like z-axis (which lasersaur's firmware has
+settings for but no home support for some reason), door sensors, etc.
 
-For more information [on Grbl](https://github.com/simen/grbl)
+## How do I use this?
 
+It compiles with avr-gcc.  If you've got the technical know-how to evaluate if
+this firmware is for you, you should be able to take it from there.
 
-TODO
-------
-- g55 wrong offset
-- homing cycle cannot recover out of bounds when limit already triggering
+## See also
 
-mbed merger notes
-------------------
-- removed
-  - inverse mode
-  - plane selection, G17, G18, G19
-  - arc support, G2, G3
-  - M112, use M2 instead
+[grbl](http://github.com/grbl/grbl)
 
-- laser intensity, 255 or 1.0
-- trunc() function in gcode parser
-- NEXT_ACTION_STOP, newer code
-- direction_bits to be uint8_t
-- nominal_laser_intensity to be uint8_t
-- rate_delta to be int32
-- SystemCoreClock/4 to be F_CPU
-- out_bits to be uint8_t
-- static volatile int busy; no need
-- stepper_init
-- stepper_synchronize
-- stepper_wake_up
-- stepper_go_idle
-- bit masking
+[lasersaur](http://www.lasersaur.com)
 
-TODO: dwell, cancel, coordinate systems
-      proportional laser intensity
-      check for: limits, door, power (vrel), chiller
-
-
-Coordinate Systems
-------------------
-
-- use G10 L20 P1 to make the current position the origin in the G54 coordinate system, P2 for the G55 coord system
-- select coord system with G54, G55, G56
-- usage scenario:
-  - use G10 L20 P1 in homing cycle to set the physical home position, associated with G54
-  - use G10 L2 P2 X10 Y10 to set a standard offset from the home, associated with the G55 coords
-  - use G10 L20 P3 (or G10 L2 P3 X__ Y1__) to set a temporary origin, associated with G56
-
-stop, pause, resume
---------------------
-stop on: power, chiller, limit, \03 control char
-stop resume on: \02 control char
-pause on: door, resume on door close
+[RAMPS](http://reprap.org/wiki/RAMPS_1.4)
