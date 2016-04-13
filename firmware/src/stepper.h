@@ -7,8 +7,8 @@
   Copyright (c) 2011 Stefan Hechenberger
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c) 2011 Sungeun K. Jeon
-  
-  Inspired by the 'RepRap cartesian firmware' by Zack Smith and 
+
+  Inspired by the 'RepRap cartesian firmware' by Zack Smith and
   Philipp Tiefenbacher.
 
   LasaurGrbl is free software: you can redistribute it and/or modify
@@ -23,11 +23,21 @@
 */
 
 #ifndef stepper_h
-#define stepper_h 
+#define stepper_h
 
 #include <avr/io.h>
 #include <avr/sleep.h>
 #include <stdbool.h>
+
+//Define the bits used in our output byte, both here and in the planner
+#define OUTBITS_X_STEP_BIT 0
+#define OUTBITS_Y_STEP_BIT 1
+#define OUTBITS_X_DIR_BIT  3
+#define OUTBITS_Y_DIR_BIT  4
+#ifdef Z_STEP_PIN
+  #define OUTBITS_Z_STEP_BIT 2
+  #define OUTBITS_Z_DIR_BIT  5
+#endif
 
 
 // Initialize and start the stepper motor subsystem
@@ -35,7 +45,7 @@ void stepper_init();
 
 // Block until all buffered steps are executed
 void stepper_synchronize();
-             
+
 // Start stepper interrupt and execute the blocks in queue.
 void stepper_wake_up();
 

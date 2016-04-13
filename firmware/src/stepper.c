@@ -90,8 +90,34 @@ static uint32_t config_step_timer(uint32_t cycles);
 // Initialize and start the stepper motor subsystem
 void stepper_init() {
   // Configure directions of interface pins
-  STEPPING_DDR |= (STEPPING_MASK | DIRECTION_MASK);
-  STEPPING_PORT = (STEPPING_PORT & ~(STEPPING_MASK | DIRECTION_MASK)) | INVERT_MASK;
+  //TODO:D update these
+  SET_OUTPUT(X_STEP_PIN);
+  SET_OUTPUT(X_DIRECTION_PIN);
+  SET_OUTPUT(Y_STEP_PIN);
+  SET_OUTPUT(Y_DIRECTION_PIN);
+  #ifdef Z_STEP_PIN //Z_DIRECTION_PIN must exist if Z_STEP_PIN does!
+    SET_OUTPUT(Z_STEP_PIN);
+    SET_OUTPUT(Z_DIRECTION_PIN);
+  #endif
+  #ifdef X_ENABLE_PIN
+    SET_OUTPUT(X_ENABLE_PIN);
+  #endif
+  #ifdef Y_ENABLE_PIN
+    SET_OUTPUT(Y_ENABLE_PIN);
+  #endif
+  #ifdef Y_ENABLE_PIN
+    SET_OUTPUT(Y_ENABLE_PIN);
+  #endif
+
+  //Set initial direction
+  WRITE(X_DIRECTION_PIN, CONFIG_INVERT_X_AXIS);
+  WRITE(Y_DIRECTION_PIN, CONFIG_INVERT_Y_AXIS);
+  #ifdef Z_STEP_PIN
+    WRITE(Z_DIRECTION_PIN, CONFIG_INVERT_Y_AXIS);
+  #endif
+
+  //STEPPING_DDR |= (STEPPING_MASK | DIRECTION_MASK);
+  //STEPPING_PORT = (STEPPING_PORT & ~(STEPPING_MASK | DIRECTION_MASK)) | INVERT_MASK;
 
   // waveform generation = 0100 = CTC
   TCCR1B &= ~(1<<WGM13);
@@ -132,13 +158,52 @@ void stepper_synchronize() {
   }
 }
 
+// figure out INVERT_MASK
+// careful! direction bits hardcoded here
+// (1<<OUTBITS_X_DIR_BIT) | (1<<OUTBITS_Y_DIR_BIT) | (1<<OUTBITS_Z_DIR_BIT),
+// but only for each one that exists.
+#if CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Y_AXIS && CONFIG_INVERT_Z_AXIS
+  #define OUTBITS_INVERT_MASK 56U
+#elif CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Y_AXIS
+  #define OUTBITS_INVERT_MASK 24U
+#elif CONFIG_INVERT_Y_AXIS && CONFIG_INVERT_Z_AXIS
+  #define OUTBITS_INVERT_MASK 48U
+#elif CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Z_AXIS
+  #define OUTBITS_INVERT_MASK 40U
+#elif CONFIG_INVERT_X_AXIS
+  #define OUTBITS_INVERT_MASK 8U
+#elif CONFIG_INVERT_Y_AXIS
+  #define OUTBITS_INVERT_MASK 16U
+#elif CONFIG_INVERT_Z_AXIS
+  #define OUTBITS_INVERT_MASK 32U
+#else
+  #define OUTBITS_INVERT_MASK 0U
+#endif
+
+// Figure out direction mask
+// (1<<OUTBITS_X_DIR_BIT) | (1<<OUTBITS_Y_DIR_BIT) | (1<<OUTBITS_Z_DIR_BIT)
+#ifdef Z_DIRECTION_PIN
+  #define OUTBITS_DIRECTION_MASK 56U //all three directions
+#else
+  #define OUTBITS_DIRECTION_MASK 24U //Only x and y
+#endif
 
 // start processing command blocks
 void stepper_wake_up() {
   if (!processing_flag) {
     processing_flag = true;
     // Initialize stepper output bits
-    out_bits = INVERT_MASK;
+    out_bits = OUTBITS_INVERT_MASK;
+    // Enable stepper drivers (set to low to enable)
+    #ifdef X_ENABLE_PIN
+      WRITE(X_ENABLE_PIN, 0);
+    #endif
+    #ifdef Y_ENABLE_PIN
+      WRITE(Y_ENABLE_PIN, 0);
+    #endif
+    #ifdef Z_ENABLE_PIN
+      WRITE(Z_ENABLE_PIN, 0);
+    #endif
     // Enable stepper driver interrupt
     TIMSK1 |= (1<<OCIE1A);
   }
@@ -152,6 +217,16 @@ void stepper_go_idle() {
   // Disable stepper driver interrupt
   TIMSK1 &= ~(1<<OCIE1A);
   control_laser_intensity(0);
+  // Disable stepper drivers (set to low to enable)
+  #ifdef X_ENABLE_PIN
+    WRITE(X_ENABLE_PIN, 1);
+  #endif
+  #ifdef Y_ENABLE_PIN
+    WRITE(Y_ENABLE_PIN, 1);
+  #endif
+  #ifdef Z_ENABLE_PIN
+    WRITE(Z_ENABLE_PIN, 1);
+  #endif
 }
 
 // stop event handling
@@ -200,7 +275,16 @@ void stepper_set_position(double x, double y, double z) {
 // they execute right before this interrupt. Not a big deal, but could use some TLC at some point.
 ISR(TIMER2_OVF_vect) {
   // reset step pins
-  STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | (INVERT_MASK & STEPPING_MASK);
+  //This is the original code - it's worth pointing out that INVERT_MASK was
+  //something like 00111000 (depending on the axis enabled) and STEPPING_MASK
+  //was 00000111 (again depending on axis) - so INVERT_MASK & STEPPING_MASK
+  //was always 0.
+  //STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | (INVERT_MASK & STEPPING_MASK);
+  WRITE(X_STEP_PIN, 0);
+  WRITE(Y_STEP_PIN, 0);
+  #ifdef Z_STEP_PIN
+    WRITE(X_STEP_PIN, 0);
+  #endif
   TCCR2B = 0; // Disable Timer2 to prevent re-entering this interrupt when it's not needed.
 }
 
@@ -222,25 +306,35 @@ ISR(TIMER1_COMPA_vect) {
     return;
   }
 
-  #ifndef DEBUG_IGNORE_SENSORS
-    // stop program when any limit is hit or the e-stop turned the power off
-    if (SENSE_LIMITS) {
-      stepper_request_stop(STATUS_LIMIT_HIT);
-      busy = false;
-      return;
-    }
-    #ifndef DRIVEBOARD
-      else if (SENSE_POWER_OFF) {
-        stepper_request_stop(STATUS_POWER_OFF);
-        busy = false;
-        return;
-      }
-    #endif
-  #endif
+  // #ifndef DEBUG_IGNORE_SENSORS
+  //   // stop program when any limit is hit or the e-stop turned the power off
+  //   if (SENSE_LIMITS) {
+  //     stepper_request_stop(STATUS_LIMIT_HIT);
+  //     busy = false;
+  //     return;
+  //   }
+  //   #ifndef DRIVEBOARD
+  //     else if (SENSE_POWER_OFF) {
+  //       stepper_request_stop(STATUS_POWER_OFF);
+  //       busy = false;
+  //       return;
+  //     }
+  //   #endif
+  // #endif
 
   // pulse steppers
-  STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
-  STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | out_bits;
+  //STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
+  WRITE(X_DIRECTION_PIN, out_bits & (1<<OUTBITS_X_DIR_BIT));
+  WRITE(Y_DIRECTION_PIN, out_bits & (1<<OUTBITS_Y_DIR_BIT));
+  #ifdef Z_DIRECTION_PIN
+    WRITE(Z_DIRECTION_PIN, out_bits & (1<<OUTBITS_Z_DIR_BIT));
+  #endif
+  //STEPPING_PORT = (STEPPING_PORT & ~STEPPING_MASK) | out_bits;
+  WRITE(X_STEP_PIN, out_bits & (1<<OUTBITS_X_STEP_BIT));
+  WRITE(Y_STEP_PIN, out_bits & (1<<OUTBITS_Y_STEP_BIT));
+  #ifdef Z_STEP_PIN
+    WRITE(Z_STEP_PIN, out_bits & (1<<OUTBITS_Z_STEP_BIT));
+  #endif
   // prime for reset pulse in CONFIG_PULSE_MICROSECONDS
   TCNT2 = -(((CONFIG_PULSE_MICROSECONDS-2)*CYCLES_PER_MICROSECOND) >> 3); // Reload timer counter
   TCCR2B = (1<<CS21); // Begin timer2. Full speed, 1/8 prescaler
@@ -279,10 +373,10 @@ ISR(TIMER1_COMPA_vect) {
       out_bits = current_block->direction_bits;
       counter_x += current_block->steps_x;
       if (counter_x > 0) {
-        out_bits |= (1<<X_STEP_BIT);
+        out_bits |= (1<<OUTBITS_X_STEP_BIT);
         counter_x -= current_block->step_event_count;
         // also keep track of absolute position
-        if ((out_bits >> X_DIRECTION_BIT) & 1 ) {
+        if ((out_bits >> OUTBITS_X_DIR_BIT) & 1 ) {
           stepper_position[X_AXIS] -= 1;
         } else {
           stepper_position[X_AXIS] += 1;
@@ -290,32 +384,34 @@ ISR(TIMER1_COMPA_vect) {
       }
       counter_y += current_block->steps_y;
       if (counter_y > 0) {
-        out_bits |= (1<<Y_STEP_BIT);
+        out_bits |= (1<<OUTBITS_Y_STEP_BIT);
         counter_y -= current_block->step_event_count;
         // also keep track of absolute position
-        if ((out_bits >> Y_DIRECTION_BIT) & 1 ) {
+        if ((out_bits >> OUTBITS_Y_DIR_BIT) & 1 ) {
           stepper_position[Y_AXIS] -= 1;
         } else {
           stepper_position[Y_AXIS] += 1;
         }
       }
+      #ifdef OUTBITS_Z_DIR_BIT
       counter_z += current_block->steps_z;
       if (counter_z > 0) {
-        out_bits |= (1<<Z_STEP_BIT);
+        out_bits |= (1<<OUTBITS_Z_STEP_BIT);
         counter_z -= current_block->step_event_count;
         // also keep track of absolute position
-        if ((out_bits >> Z_DIRECTION_BIT) & 1 ) {
+        if ((out_bits >> OUTBITS_Z_DIR_BIT) & 1 ) {
           stepper_position[Z_AXIS] -= 1;
         } else {
           stepper_position[Z_AXIS] += 1;
         }
       }
+      #endif
       //////
 
       step_events_completed++;  // increment step count
 
       // apply stepper invert mask
-      out_bits ^= INVERT_MASK;
+      out_bits ^= OUTBITS_INVERT_MASK;
 
       ////////// SPEED ADJUSTMENT
       if (step_events_completed < current_block->step_event_count) {  // block not finished
@@ -365,7 +461,7 @@ ISR(TIMER1_COMPA_vect) {
       ////////// END OF SPEED ADJUSTMENT
 
       break;
-
+    #ifdef AIR_ASSIST_PIN
     case TYPE_AIR_ASSIST_ENABLE:
       control_air_assist(true);
       current_block = NULL;
@@ -377,7 +473,9 @@ ISR(TIMER1_COMPA_vect) {
       current_block = NULL;
       planner_discard_current_block();
       break;
+    #endif
 
+    #ifdef AUX1_ASSIST_PIN
     case TYPE_AUX1_ASSIST_ENABLE:
       control_aux1_assist(true);
       current_block = NULL;
@@ -389,8 +487,9 @@ ISR(TIMER1_COMPA_vect) {
       current_block = NULL;
       planner_discard_current_block();
       break;
+    #endif
 
-    #ifdef DRIVEBOARD
+    #ifdef AUX2_ASSIST_PIN
       case TYPE_AUX2_ASSIST_ENABLE:
         control_aux2_assist(true);
         current_block = NULL;
@@ -496,61 +595,81 @@ static void adjust_speed( uint32_t steps_per_minute ) {
 static void homing_cycle(bool x_axis, bool y_axis, bool z_axis, bool reverse_direction, uint32_t microseconds_per_pulse) {
 
   uint32_t step_delay = microseconds_per_pulse - CONFIG_PULSE_MICROSECONDS;
-  uint8_t out_bits = DIRECTION_MASK;
-  uint8_t limit_bits;
+  uint8_t out_bits = OUTBITS_DIRECTION_MASK;
   uint8_t x_overshoot_count = 6;
   uint8_t y_overshoot_count = 6;
 
-  if (x_axis) { out_bits |= (1<<X_STEP_BIT); }
-  if (y_axis) { out_bits |= (1<<Y_STEP_BIT); }
-  if (z_axis) { out_bits |= (1<<Z_STEP_BIT); }
+  if (x_axis) { out_bits |= (1<<OUTBITS_X_STEP_BIT); }
+  if (y_axis) { out_bits |= (1<<OUTBITS_Y_STEP_BIT); }
+  #ifdef OUTBITS_Z_STEP_BIT
+    if (z_axis) { out_bits |= (1<<OUTBITS_Z_STEP_BIT); }
+  #endif
 
   // Invert direction bits if this is a reverse homing_cycle
   if (reverse_direction) {
-    out_bits ^= DIRECTION_MASK;
+    out_bits ^= OUTBITS_DIRECTION_MASK;
   }
 
   // Apply the global invert mask
-  out_bits ^= INVERT_MASK;
+  out_bits ^= OUTBITS_INVERT_MASK;
 
   // Set direction pins
-  STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
+  //STEPPING_PORT = (STEPPING_PORT & ~DIRECTION_MASK) | (out_bits & DIRECTION_MASK);
+  WRITE(X_DIRECTION_PIN,out_bits & (1<<OUTBITS_X_DIR_BIT));
+  WRITE(Y_DIRECTION_PIN,out_bits & (1<<OUTBITS_Y_DIR_BIT));
+  #ifdef Z_DIRECTION_PIN
+    WRITE(Z_DIRECTION_PIN,out_bits & (1<<OUTBITS_Z_DIR_BIT));
+  #endif
 
   for(;;) {
-    limit_bits = LIMIT_PIN;
-    if (reverse_direction) {
-      // Invert limit_bits if this is a reverse homing_cycle
-      limit_bits ^= LIMIT_MASK;
-    }
-    if (x_axis && !(limit_bits & (1<<X1_LIMIT_BIT))) {
+    //limit_bits = LIMIT_PIN;
+    //if (reverse_direction) {
+      // Invert limit_bits if this is a reverse homing_cycle (finding position the switch releases)
+      //limit_bits ^= LIMIT_MASK;
+    //}
+    //if (x_axis && !(limit_bits & (1<<X1_LIMIT_BIT))) {
+    if (x_axis && (SENSE_X1_LIMIT ^ reverse_direction)) {
       if(x_overshoot_count == 0) {
         x_axis = false;
-        out_bits ^= (1<<X_STEP_BIT);
+        out_bits ^= (1<<OUTBITS_X_STEP_BIT);
       } else {
         x_overshoot_count--;
       }
     }
-    if (y_axis && !(limit_bits & (1<<Y1_LIMIT_BIT))) {
+    //if (y_axis && !(limit_bits & (1<<Y1_LIMIT_BIT))) {
+    if (y_axis && (SENSE_Y1_LIMIT ^ reverse_direction)) {
       if(y_overshoot_count == 0) {
         y_axis = false;
-        out_bits ^= (1<<Y_STEP_BIT);
+        out_bits ^= (1<<OUTBITS_Y_STEP_BIT);
       } else {
         y_overshoot_count--;
       }
     }
-    // if (z_axis && !(limit_bits & (1<<Z1_LIMIT_BIT))) {
+    //if (z_axis && (SENSE_Z1_LIMIT ^ reverse_direction)) {
     //   if(z_overshoot_count == 0) {
     //     z_axis = false;
-    //     out_bits ^= (1<<Z_STEP_BIT);
+    //     out_bits ^= (1<<OUTBITS_Z_STEP_BIT);
     //   } else {
     //     z_overshoot_count--;
     //   }
     // }
     if(x_axis || y_axis || z_axis) {
         // step all axes still in out_bits
-        STEPPING_PORT |= out_bits & STEPPING_MASK;
+        //STEPPING_PORT |= out_bits & STEPPING_MASK; I'd have used parens here!
+        WRITE(X_STEP_PIN, out_bits & (1<<OUTBITS_X_STEP_BIT));
+        WRITE(Y_STEP_PIN, out_bits & (1<<OUTBITS_Y_STEP_BIT));
+        #ifdef Z_STEP_PIN
+          WRITE(Z_STEP_PIN, out_bits & (1<<OUTBITS_Z_STEP_BIT));
+        #endif
         _delay_us(CONFIG_PULSE_MICROSECONDS);
-        STEPPING_PORT ^= out_bits & STEPPING_MASK;
+        //STEPPING_PORT ^= out_bits & STEPPING_MASK;
+        //original code used xor, but we had already written out_bits to what
+        //we xor'd, so the result was always 0.  So... just use zero.
+        WRITE(X_STEP_PIN, 0);
+        WRITE(Y_STEP_PIN, 0);
+        #ifdef Z_STEP_PIN
+          WRITE(Z_STEP_PIN, 0);
+        #endif
         _delay_us(step_delay);
     } else {
         break;

@@ -25,121 +25,77 @@
 
 // Version number
 // (must not contain capital letters)
-#define LASAURGRBL_VERSION "14.11b"
-// build for new driveboard hardware
-#define DRIVEBOARD
-
-#define V1401
+#define LASAURGRBL_VERSION "14.11r"
 
 #define BAUD_RATE 57600
 // #define DEBUG_IGNORE_SENSORS  // set for debugging
 
+//#include "control_board/lasersaur_driveboard.h"
+#include "control_board/ramps_1.4.h"
 
-#ifndef V1401
-  #define CONFIG_X_STEPS_PER_MM 32.80839895 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-  #define CONFIG_Y_STEPS_PER_MM 32.80839895 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-  #define CONFIG_Z_STEPS_PER_MM 32.80839895 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-#else
-  #define CONFIG_X_STEPS_PER_MM 88.88888888 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-  #define CONFIG_Y_STEPS_PER_MM 90.90909090 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-  #define CONFIG_Z_STEPS_PER_MM 33.33333333 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-#endif
-#define CONFIG_PULSE_MICROSECONDS 5
-#define CONFIG_FEEDRATE 8000.0 // in millimeters per minute
-#define CONFIG_SEEKRATE 8000.0
-#define CONFIG_ACCELERATION 1800000.0 // mm/min^2, typically 1000000-8000000, divide by (60*60) to get mm/sec^2
-#define CONFIG_JUNCTION_DEVIATION 0.006 // mm
-#define CONFIG_X_ORIGIN_OFFSET 5.0  // mm, x-offset of table origin from physical home
-#define CONFIG_Y_ORIGIN_OFFSET 5.0  // mm, y-offset of table origin from physical home
-#define CONFIG_Z_ORIGIN_OFFSET 0.0   // mm, z-offset of table origin from physical home
-#ifndef V1401
-  #define CONFIG_INVERT_X_AXIS 1  // 0 is regular, 1 inverts the y direction
-#else
-  #define CONFIG_INVERT_X_AXIS 0
-#endif
-#define CONFIG_INVERT_Y_AXIS 1  // 0 is regular, 1 inverts the y direction
-#define CONFIG_INVERT_Z_AXIS 1  // 0 is regular, 1 inverts the y direction
+#include "laser_table/mikes_table.h"
+//#include "laser_table/lasersaur_v1401.h"
+//#include "laser_table/lasersaur.h"
 
 
-#define SENSE_DDR               DDRD
-#define SENSE_PORT              PORTD
-#define SENSE_PIN               PIND
-#ifndef DRIVEBOARD
-  #define POWER_BIT             2
-#endif
-#define CHILLER_BIT             3
-#define DOOR_BIT                2
+//#define SENSE_DDR               DDRD
+//#define SENSE_PORT              PORTD
+//#define SENSE_PIN               PIND
+//#ifndef DRIVEBOARD
+//  #define POWER_BIT             2
+//#endif
+//#define CHILLER_BIT             3
+//#define DOOR_BIT                2
 
-#ifdef DRIVEBOARD
-  #define ASSIST_DDR            DDRD
-  #define ASSIST_PORT           PORTD
-  #define AIR_ASSIST_BIT        4
-  #define AUX1_ASSIST_BIT       7
-  #define AUX2_ASSIST_BIT       5
-#else
-  #define LIMITS_OVERWRITE_DDR  DDRD
-  #define LIMITS_OVERWRITE_PORT PORTD
-  #define LIMITS_OVERWRITE_BIT  7
-#endif
+// #ifdef DRIVEBOARD
+//   #define ASSIST_DDR            DDRD
+//   #define ASSIST_PORT           PORTD
+//   #define AIR_ASSIST_BIT        4
+//   #define AUX1_ASSIST_BIT       7
+//   #define AUX2_ASSIST_BIT       5
+// #else
+//   #define LIMITS_OVERWRITE_DDR  DDRD
+//   #define LIMITS_OVERWRITE_PORT PORTD
+//   #define LIMITS_OVERWRITE_BIT  7
+// #endif
 
-#define LIMIT_DDR               DDRC
-#define LIMIT_PORT              PORTC
-#define LIMIT_PIN               PINC
-#define X1_LIMIT_BIT            0
-#define X2_LIMIT_BIT            1
-#define Y1_LIMIT_BIT            2
-#define Y2_LIMIT_BIT            3
-#ifdef DRIVEBOARD
-  #define Z1_LIMIT_BIT          4
-  #define Z2_LIMIT_BIT          5
-#else
-  #define ASSIST_DDR            DDRC
-  #define ASSIST_PORT           PORTC
-  #define AIR_ASSIST_BIT        4
-  #define AUX1_ASSIST_BIT       5
-#endif
+// #define LIMIT_DDR               DDRC
+// #define LIMIT_PORT              PORTC
+// #define LIMIT_PIN               PINC
+// #define X1_LIMIT_BIT            0
+// #define X2_LIMIT_BIT            1
+// #define Y1_LIMIT_BIT            2
+// #define Y2_LIMIT_BIT            3
+// #ifdef DRIVEBOARD
+//   #define Z1_LIMIT_BIT          4
+//   #define Z2_LIMIT_BIT          5
+// #else
+//   #define ASSIST_DDR            DDRC
+//   #define ASSIST_PORT           PORTC
+//   #define AIR_ASSIST_BIT        4
+//   #define AUX1_ASSIST_BIT       5
+// #endif
 
-#define STEPPING_DDR            DDRB
-#define STEPPING_PORT           PORTB
-#define X_STEP_BIT              0
-#define Y_STEP_BIT              1
-#define Z_STEP_BIT              2
-#define X_DIRECTION_BIT         3
-#define Y_DIRECTION_BIT         4
-#define Z_DIRECTION_BIT         5
+// #define STEPPING_DDR            DDRB
+// #define STEPPING_PORT           PORTB
+// #define X_STEP_BIT              0
+// #define Y_STEP_BIT              1
+// #define Z_STEP_BIT              2
+// #define X_DIRECTION_BIT         3
+// #define Y_DIRECTION_BIT         4
+// #define Z_DIRECTION_BIT         5
 
 
 
-#ifdef DRIVEBOARD
-  #define SENSE_MASK ((1<<CHILLER_BIT)|(1<<DOOR_BIT))
-  #define LIMIT_MASK ((1<<X1_LIMIT_BIT)|(1<<X2_LIMIT_BIT)|(1<<Y1_LIMIT_BIT)|(1<<Y2_LIMIT_BIT)|(1<<Z1_LIMIT_BIT)|(1<<Z2_LIMIT_BIT))
-#else
-  #define SENSE_MASK ((1<<POWER_BIT)|(1<<CHILLER_BIT)|(1<<DOOR_BIT))
-  #define LIMIT_MASK ((1<<X1_LIMIT_BIT)|(1<<X2_LIMIT_BIT)|(1<<Y1_LIMIT_BIT)|(1<<Y2_LIMIT_BIT))
-#endif
-#define STEPPING_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT))
-#define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT))
-
-// figure out INVERT_MASK
-// careful! direction pins hardcoded here#if DRIVEBOARD
-// (1<<X_DIRECTION_BIT) | (1<<Y_DIRECTION_BIT) | (1<<Y_DIRECTION_BIT)
-#if CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Y_AXIS && CONFIG_INVERT_Z_AXIS
-  #define INVERT_MASK 56U
-#elif CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Y_AXIS
-  #define INVERT_MASK 24U
-#elif CONFIG_INVERT_Y_AXIS && CONFIG_INVERT_Z_AXIS
-  #define INVERT_MASK 48U
-#elif CONFIG_INVERT_X_AXIS && CONFIG_INVERT_Z_AXIS
-  #define INVERT_MASK 40U
-#elif CONFIG_INVERT_X_AXIS
-  #define INVERT_MASK 8U
-#elif CONFIG_INVERT_Y_AXIS
-  #define INVERT_MASK 16U
-#elif CONFIG_INVERT_Z_AXIS
-  #define INVERT_MASK 32U
-#else
-  #define INVERT_MASK 0U
-#endif
+// #ifdef DRIVEBOARD
+//   #define SENSE_MASK ((1<<CHILLER_BIT)|(1<<DOOR_BIT))
+//   #define LIMIT_MASK ((1<<X1_LIMIT_BIT)|(1<<X2_LIMIT_BIT)|(1<<Y1_LIMIT_BIT)|(1<<Y2_LIMIT_BIT)|(1<<Z1_LIMIT_BIT)|(1<<Z2_LIMIT_BIT))
+// #else
+//   #define SENSE_MASK ((1<<POWER_BIT)|(1<<CHILLER_BIT)|(1<<DOOR_BIT))
+//   #define LIMIT_MASK ((1<<X1_LIMIT_BIT)|(1<<X2_LIMIT_BIT)|(1<<Y1_LIMIT_BIT)|(1<<Y2_LIMIT_BIT))
+// #endif
+// #define STEPPING_MASK ((1<<X_STEP_BIT)|(1<<Y_STEP_BIT)|(1<<Z_STEP_BIT))
+// #define DIRECTION_MASK ((1<<X_DIRECTION_BIT)|(1<<Y_DIRECTION_BIT)|(1<<Z_DIRECTION_BIT))
 
 
 
@@ -178,8 +134,33 @@
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
 
+
+//Derived functions: these were sprinkled throughout the firmware code to turn
+//the port/ddr/pin/bit assignments into useful code.  I moved it here when
+//I made separate configs for driver boards
+
+//#define SENSE_POWER_OFF !((SENSE_PIN >> POWER_BIT) & 1)
+#ifndef POWER_PIN
+  #define SENSE_POWER_OFF 0
+#else
+  #define SENSE_POWER_OFF !(READ(POWER_PIN))
 #endif
 
+//#define SENSE_CHILLER_OFF !((SENSE_PIN >> CHILLER_BIT) & 1)
+#ifndef CHILLER_PIN
+  #define SENSE_CHILLER_OFF 0
+#else
+  #define SENSE_CHILLER_OFF !(READ(CHILLER_PIN))
+#endif
+
+//#define SENSE_DOOR_OPEN !((SENSE_PIN >> DOOR_BIT) & 1)
+#ifndef DOOR_PIN
+  #define SENSE_DOOR_OPEN 0
+#else
+  #define SENSE_DOOR_OPEN !(READ(DOOR_PIN))
+#endif
+
+#endif
 
 
 // bit math

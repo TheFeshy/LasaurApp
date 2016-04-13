@@ -20,26 +20,62 @@
 
 #include <stdbool.h>
 #include "config.h"
+#include "fastio.h"
 
 
 void sense_init();
-#define SENSE_X1_LIMIT !((LIMIT_PIN >> X1_LIMIT_BIT) & 1)
-#define SENSE_X2_LIMIT !((LIMIT_PIN >> X2_LIMIT_BIT) & 1)
-#define SENSE_Y1_LIMIT !((LIMIT_PIN >> Y1_LIMIT_BIT) & 1)
-#define SENSE_Y2_LIMIT !((LIMIT_PIN >> Y2_LIMIT_BIT) & 1)
-#define SENSE_Z1_LIMIT !((LIMIT_PIN >> Z1_LIMIT_BIT) & 1)
-#define SENSE_Z2_LIMIT !((LIMIT_PIN >> Z2_LIMIT_BIT) & 1)
-#define SENSE_CHILLER_OFF !((SENSE_PIN >> CHILLER_BIT) & 1)
-#define SENSE_DOOR_OPEN !((SENSE_PIN >> DOOR_BIT) & 1)
-#ifdef DRIVEBOARD
-  // invert door, remove power, add z_limits
-  #define SENSE_LIMITS (SENSE_X1_LIMIT || SENSE_X2_LIMIT || SENSE_Y1_LIMIT || SENSE_Y2_LIMIT || SENSE_Z1_LIMIT || SENSE_Z2_LIMIT)
-  #define SENSE_ANY (SENSE_LIMITS || SENSE_CHILLER_OFF || SENSE_DOOR_OPEN)
+
+//For now at least X and Y limits are necessary for homing!
+#define SENSE_X1_LIMIT !(READ(X1_LIMIT_PIN))
+#define SENSE_Y1_LIMIT !(READ(Y1_LIMIT_PIN))
+
+#ifndef X2_LIMIT_PIN
+  #define SENSE_X2_LIMIT 0
 #else
-  #define SENSE_POWER_OFF !((SENSE_PIN >> POWER_BIT) & 1)
-  #define SENSE_LIMITS (SENSE_X1_LIMIT || SENSE_X2_LIMIT || SENSE_Y1_LIMIT || SENSE_Y2_LIMIT)
-  #define SENSE_ANY (SENSE_LIMITS || SENSE_POWER_OFF || SENSE_CHILLER_OFF || SENSE_DOOR_OPEN)
+  #define SENSE_X2_LIMIT !(READ(X2_LIMIT_PIN))
 #endif
+
+#ifndef Y2_LIMIT_PIN
+  #define SENSE_Y2_LIMIT 0
+#else
+  #define SENSE_Y2_LIMIT !(READ(Y2_LIMIT_PIN))
+#endif
+
+#ifndef Z1_LIMIT_PIN
+  #define SENSE_Z1_LIMIT 0
+#else
+  #define SENSE_Z1_LIMIT !(READ(Z1_LIMIT_PIN))
+#endif
+
+#ifndef Z2_LIMIT_PIN
+  #define SENSE_Z2_LIMIT 0
+#else
+  #define SENSE_Z2_LIMIT !(READ(Z2_LIMIT_PIN))
+#endif
+
+#ifndef POWER_PIN
+  #define SENSE_POWER_OFF 0
+#else
+  #define SENSE_POWER_OFF !(READ(POWER_PIN))
+#endif
+
+//#define SENSE_CHILLER_OFF !((SENSE_PIN >> CHILLER_BIT) & 1)
+#ifndef CHILLER_PIN
+  #define SENSE_CHILLER_OFF 0
+#else
+  #define SENSE_CHILLER_OFF !(READ(CHILLER_PIN))
+#endif
+
+//#define SENSE_DOOR_OPEN !((SENSE_PIN >> DOOR_BIT) & 1)
+#ifndef DOOR_PIN
+  #define SENSE_DOOR_OPEN 0
+#else
+  #define SENSE_DOOR_OPEN !(READ(DOOR_PIN))
+#endif
+
+
+#define SENSE_LIMITS (SENSE_X1_LIMIT || SENSE_X2_LIMIT || SENSE_Y1_LIMIT || SENSE_Y2_LIMIT || SENSE_Z1_LIMIT || SENSE_Z2_LIMIT)
+#define SENSE_ANY (SENSE_LIMITS || SENSE_POWER_OFF || SENSE_CHILLER_OFF || SENSE_DOOR_OPEN)
 
 void control_init();
 

@@ -5,9 +5,9 @@
   Copyright (c) 2009-2011 Simen Svale Skogsrud
   Copyright (c) 2011 Stefan Hechenberger
   Copyright (c) 2011 Sungeun K. Jeon
-  
+
   Inspired by the Arduino GCode Interpreter by Mike Ellery and the
-  NIST RS274/NGC Interpreter by Kramer, Proctor and Messina.  
+  NIST RS274/NGC Interpreter by Kramer, Proctor and Messina.
 
   LasaurGrbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
 #define MM_PER_INCH (25.4)
 
 #define NEXT_ACTION_NONE 0
-#define NEXT_ACTION_SEEK 1 
+#define NEXT_ACTION_SEEK 1
 #define NEXT_ACTION_FEED 2
 #define NEXT_ACTION_DWELL 3
 #define NEXT_ACTION_HOMING_CYCLE 4
@@ -44,10 +44,8 @@
 #define NEXT_ACTION_AIR_ASSIST_DISABLE 7
 #define NEXT_ACTION_AUX1_ASSIST_ENABLE 8
 #define NEXT_ACTION_AUX1_ASSIST_DISABLE 9
-#ifdef DRIVEBOARD
-  #define NEXT_ACTION_AUX2_ASSIST_ENABLE 10
-  #define NEXT_ACTION_AUX2_ASSIST_DISABLE 11
-#endif
+#define NEXT_ACTION_AUX2_ASSIST_ENABLE 10
+#define NEXT_ACTION_AUX2_ASSIST_DISABLE 11
 
 #define OFFSET_G54 0
 #define OFFSET_G55 1
@@ -86,7 +84,7 @@ void gcode_init() {
   gc.feed_rate = CONFIG_FEEDRATE;
   gc.seek_rate = CONFIG_SEEKRATE;
   gc.absolute_mode = true;
-  gc.nominal_laser_intensity = 0U;   
+  gc.nominal_laser_intensity = 0U;
   gc.offselect = OFFSET_G54;
   // prime G54 cs
   // refine with "G10 L2 P0 X_ Y_ Z_"
@@ -100,7 +98,7 @@ void gcode_init() {
   gc.offsets[3+Y_AXIS] = CONFIG_Y_ORIGIN_OFFSET;
   gc.offsets[3+Z_AXIS] = CONFIG_Z_ORIGIN_OFFSET;
   position_update_requested = false;
-  line_checksum_ok_already = false; 
+  line_checksum_ok_already = false;
 }
 
 
@@ -117,18 +115,18 @@ void gcode_process_line() {
       // reached line size, other side sent too long lines
       stepper_request_stop(STATUS_LINE_BUFFER_OVERFLOW);
       break;
-    } else if (chr <= ' ') { 
+    } else if (chr <= ' ') {
       // ignore control characters and space
     } else {
       // add to line, as char which is signed
       rx_line[numChars++] = (char)chr;
     }
   }
-  
+
   //// process line
   if (numChars > 0) {          // Line is complete. Then execute!
     rx_line[numChars] = '\0';  // terminate string
-    
+
     // handle position update after a stop
     if (position_update_requested) {
       gc.position[X_AXIS] = stepper_get_position_x();
@@ -137,7 +135,7 @@ void gcode_process_line() {
       position_update_requested = false;
       //printString("gcode pos update\n");  // debug
     }
-        
+
     if (stepper_stop_requested()) {
       printString("!");  // report harware is in stop mode
       status_code = stepper_stop_status();
@@ -147,16 +145,16 @@ void gcode_process_line() {
       } else if (status_code == STATUS_LIMIT_HIT) {
         printString("L");  // Stop: Limit Hit
       } else if (status_code == STATUS_SERIAL_STOP_REQUEST) {
-        printString("R");  // Stop: Serial Request   
+        printString("R");  // Stop: Serial Request
       } else if (status_code == STATUS_RX_BUFFER_OVERFLOW) {
-        printString("B");  // Stop: Rx Buffer Overflow  
+        printString("B");  // Stop: Rx Buffer Overflow
       } else if (status_code == STATUS_LINE_BUFFER_OVERFLOW) {
-        printString("I");  // Stop: Line Buffer Overflow  
+        printString("I");  // Stop: Line Buffer Overflow
       } else if (status_code == STATUS_TRANSMISSION_ERROR) {
-        printString("T");  // Stop: Serial Transmission Error  
+        printString("T");  // Stop: Serial Transmission Error
       } else {
         printString("O");  // Stop: Other error
-        printInteger(status_code);        
+        printInteger(status_code);
       }
     } else {
       if (rx_line[0] == '*' || rx_line[0] == '^') {
@@ -177,14 +175,14 @@ void gcode_process_line() {
             checksum += (uint8_t)*itr++;
             if (checksum >= 128) {
               checksum -= 128;
-            }          
+            }
           }
           checksum = (checksum >> 1) + 128; //  /2, +128
           // printString("(");
           // printInteger(rx_checksum);
           // printString(",");
           // printInteger(checksum);
-          // printString(")");        
+          // printString(")");
           if (checksum != rx_checksum) {
             if (rx_line[0] == '^') {
               skip_line = true;
@@ -198,7 +196,7 @@ void gcode_process_line() {
             // printString("$");
             if (rx_line[0] == '^') {
               line_checksum_ok_already = true;
-            }            
+            }
             skip_line = false;
           }
         } else {  // we already got a correct line
@@ -211,7 +209,7 @@ void gcode_process_line() {
       } else {
         rx_line_cursor = rx_line;
       }
-      
+
       if (!skip_line) {
         if (rx_line_cursor[0] != '?') {
           // process the next line of G-code
@@ -224,15 +222,15 @@ void gcode_process_line() {
           } else if (status_code == STATUS_EXPECTED_COMMAND_LETTER) {
             printString("E");  // Warning: Expected command letter
           } else if (status_code == STATUS_UNSUPPORTED_STATEMENT) {
-            printString("U");  // Warning: Unsupported statement   
+            printString("U");  // Warning: Unsupported statement
           } else {
             printString("W");  // Warning: Other error
-            printInteger(status_code);        
-          } 
+            printInteger(status_code);
+          }
         } else {
           print_extended_status = true;
-        } 
-      }  
+        }
+      }
     }
 
     #ifndef DEBUG_IGNORE_SENSORS
@@ -247,7 +245,7 @@ void gcode_process_line() {
         // power
         if (SENSE_POWER_OFF) {
           printString("P"); // Power Off
-        } 
+        }
       #endif
       // limit
       if (SENSE_LIMITS) {
@@ -263,16 +261,16 @@ void gcode_process_line() {
         if (SENSE_Y2_LIMIT) {
           printString("L4");  // Limit Y21 Hit
         }
-      } 
+      }
     #endif
 
     //
-    if (print_extended_status) {   
+    if (print_extended_status) {
       // position
       printString("X");
       printFloat(stepper_get_position_x());
       printString("Y");
-      printFloat(stepper_get_position_y());       
+      printFloat(stepper_get_position_y());
       // version
       printPgmString(PSTR("V" LASAURGRBL_VERSION));
     }
@@ -287,11 +285,11 @@ void gcode_process_line() {
 // characters and signed floating point values (no whitespace). Comments and block delete
 // characters have been removed.
 uint8_t gcode_execute_line(char *line) {
-  uint8_t char_counter = 0;  
+  uint8_t char_counter = 0;
   char letter;
   double value;
   int int_value;
-  double unit_converted_value;  
+  double unit_converted_value;
   uint8_t next_action = NEXT_ACTION_NONE;
   double target[3];
   double p = 0.0;
@@ -299,7 +297,7 @@ uint8_t gcode_execute_line(char *line) {
   int l = 0;
   bool got_actual_line_command = false;  // as opposed to just e.g. G1 F1200
   gc.status_code = STATUS_OK;
-    
+
   //// Pass 1: Commands
   while(next_statement(&letter, &value, line, &char_counter)) {
     int_value = trunc(value);
@@ -322,21 +320,25 @@ uint8_t gcode_execute_line(char *line) {
         break;
       case 'M':
         switch(int_value) {
-          case 80: next_action = NEXT_ACTION_AIR_ASSIST_ENABLE;break;
-          case 81: next_action = NEXT_ACTION_AIR_ASSIST_DISABLE;break;
-          case 82: next_action = NEXT_ACTION_AUX1_ASSIST_ENABLE;break;
-          case 83: next_action = NEXT_ACTION_AUX1_ASSIST_DISABLE;break;
-          #ifdef DRIVEBOARD
+          #ifdef AIR_ASSIST_PIN
+            case 80: next_action = NEXT_ACTION_AIR_ASSIST_ENABLE;break;
+            case 81: next_action = NEXT_ACTION_AIR_ASSIST_DISABLE;break;
+          #endif
+          #ifdef AUX1_ASSIST_PIN
+            case 82: next_action = NEXT_ACTION_AUX1_ASSIST_ENABLE;break;
+            case 83: next_action = NEXT_ACTION_AUX1_ASSIST_DISABLE;break;
+          #endif
+          #ifdef AUX2_ASSIST_PIN
             case 84: next_action = NEXT_ACTION_AUX2_ASSIST_ENABLE;break;
             case 85: next_action = NEXT_ACTION_AUX2_ASSIST_DISABLE;break;
           #endif
           default: FAIL(STATUS_UNSUPPORTED_STATEMENT);
-        }            
+        }
         break;
     }
     if (gc.status_code) { break; }
   }
-  
+
   // bail when errors
   if (gc.status_code) { return gc.status_code; }
 
@@ -366,7 +368,7 @@ uint8_t gcode_execute_line(char *line) {
           target[letter - 'X'] += unit_converted_value;
         }
         got_actual_line_command = true;
-        break;        
+        break;
       case 'P':  // dwelling seconds or CS selector
         if (next_action == NEXT_ACTION_SET_COORDINATE_OFFSET) {
           cs = trunc(value);
@@ -376,34 +378,34 @@ uint8_t gcode_execute_line(char *line) {
         break;
       case 'S':
         gc.nominal_laser_intensity = value;
-        break; 
-      case 'L':  // G10 qualifier 
+        break;
+      case 'L':  // G10 qualifier
       l = trunc(value);
         break;
     }
   }
-  
+
   // bail when error
   if (gc.status_code) { return(gc.status_code); }
-      
+
   //// Perform any physical actions
   switch (next_action) {
     case NEXT_ACTION_SEEK:
       if (got_actual_line_command) {
-        planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS], 
-                      target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS], 
-                      target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS], 
+        planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS],
+                      target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS],
+                      target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS],
                       gc.seek_rate, 0 );
       }
-      break;   
+      break;
     case NEXT_ACTION_FEED:
       if (got_actual_line_command) {
-        planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS], 
-                      target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS], 
-                      target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS], 
-                      gc.feed_rate, gc.nominal_laser_intensity );                   
+        planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS],
+                      target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS],
+                      target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS],
+                      gc.feed_rate, gc.nominal_laser_intensity );
       }
-      break; 
+      break;
     case NEXT_ACTION_DWELL:
       planner_dwell(p, gc.nominal_laser_intensity);
       break;
@@ -416,10 +418,10 @@ uint8_t gcode_execute_line(char *line) {
     //   // move to table origin
     //   target[X_AXIS] = 0;
     //   target[Y_AXIS] = 0;
-    //   target[Z_AXIS] = 0;         
-    //   planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS], 
-    //                 target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS], 
-    //                 target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS], 
+    //   target[Z_AXIS] = 0;
+    //   planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS],
+    //                 target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS],
+    //                 target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS],
     //                 gc.seek_rate, 0 );
     //   break;
     case NEXT_ACTION_HOMING_CYCLE:
@@ -433,10 +435,10 @@ uint8_t gcode_execute_line(char *line) {
       gc.offselect = OFFSET_G54;
       target[X_AXIS] = 0;
       target[Y_AXIS] = 0;
-      target[Z_AXIS] = 0;         
-      planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS], 
-                    target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS], 
-                    target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS], 
+      target[Z_AXIS] = 0;
+      planner_line( target[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS],
+                    target[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS],
+                    target[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS],
                     gc.seek_rate, 0 );
       break;
     case NEXT_ACTION_SET_COORDINATE_OFFSET:
@@ -450,7 +452,7 @@ uint8_t gcode_execute_line(char *line) {
           target[X_AXIS] = (gc.position[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS]) - gc.offsets[3*cs+X_AXIS];
           target[Y_AXIS] = (gc.position[Y_AXIS] + gc.offsets[3*gc.offselect+Y_AXIS]) - gc.offsets[3*cs+Y_AXIS];
           target[Z_AXIS] = (gc.position[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS]) - gc.offsets[3*cs+Z_AXIS];
-          
+
         } else if (l == 20) {
           // set offset to current pos, eg: G10 L20 P2
           gc.offsets[3*cs+X_AXIS] = gc.position[X_AXIS] + gc.offsets[3*gc.offselect+X_AXIS];
@@ -458,7 +460,7 @@ uint8_t gcode_execute_line(char *line) {
           gc.offsets[3*cs+Z_AXIS] = gc.position[Z_AXIS] + gc.offsets[3*gc.offselect+Z_AXIS];
           target[X_AXIS] = 0;
           target[Y_AXIS] = 0;
-          target[Z_AXIS] = 0;                 
+          target[Z_AXIS] = 0;
         }
       }
       break;
@@ -483,7 +485,7 @@ uint8_t gcode_execute_line(char *line) {
         break;
     #endif
   }
-  
+
   // As far as the parser is concerned, the position is now == target. In reality the
   // motion control system might still be processing the action and the real tool position
   // in any intermediate location.
@@ -504,7 +506,7 @@ static int next_statement(char *letter, double *double_ptr, char *line, uint8_t 
   if (line[*char_counter] == 0) {
     return(0); // No more statements
   }
-  
+
   *letter = line[*char_counter];
   if((*letter < 'A') || (*letter > 'Z')) {
     FAIL(STATUS_EXPECTED_COMMAND_LETTER);
@@ -512,23 +514,23 @@ static int next_statement(char *letter, double *double_ptr, char *line, uint8_t 
   }
   (*char_counter)++;
   if (!read_double(line, char_counter, double_ptr)) {
-    FAIL(STATUS_BAD_NUMBER_FORMAT); 
+    FAIL(STATUS_BAD_NUMBER_FORMAT);
     return(0);
   };
   return(1);
 }
 
 
-// Read a floating point value from a string. Line points to the input buffer, char_counter 
-// is the indexer pointing to the current character of the line, while double_ptr is 
+// Read a floating point value from a string. Line points to the input buffer, char_counter
+// is the indexer pointing to the current character of the line, while double_ptr is
 // a pointer to the result variable. Returns true when it succeeds
 static int read_double(char *line, uint8_t *char_counter, double *double_ptr) {
   char *start = line + *char_counter;
   char *end;
-  
+
   *double_ptr = strtod(start, &end);
-  if(end == start) { 
-    return(false); 
+  if(end == start) {
+    return(false);
   };
 
   *char_counter = end - line;
@@ -540,7 +542,7 @@ static int read_double(char *line, uint8_t *char_counter, double *double_ptr) {
 
 
 
-/* 
+/*
   Intentionally not supported:
 
   - arcs {G2, G3}

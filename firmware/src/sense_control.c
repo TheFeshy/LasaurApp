@@ -22,17 +22,38 @@
 #include "sense_control.h"
 #include "stepper.h"
 #include "planner.h"
+#include "fastio.h"
 
 
 
 void sense_init() {
   //// chiller, door, (power)
-  SENSE_DDR &= ~(SENSE_MASK);  // set as input pins 
-  // SENSE_PORT |= SENSE_MASK;    //activate pull-up resistors 
-  
-  //// x1_lmit, x2_limit, y1_limit, y2_limit, z1_limit, z2_limit
-  LIMIT_DDR &= ~(LIMIT_MASK);  // set as input pins
-  // LIMIT_PORT |= LIMIT_MASK;    //activate pull-up resistors   
+  //SENSE_DDR &= ~(SENSE_MASK);  // set as input pins
+  #ifdef DOOR_PIN
+    SET_INPUT(DOOR_PIN)
+  #endif
+  #ifdef POWER_PIN
+    SET_INPUT(POWER_PIN)
+  #endif
+  #ifdef CHILLER_PIN
+    SET_INPUT(CHILLER_PIN)
+  #endif
+
+  SET_OUTPUT(X1_LIMIT_PIN);
+  SET_OUTPUT(Y1_LIMIT_PIN);
+  #ifdef X2_LIMIT_PIN
+    SET_OUTPUT(X2_LIMIT_PIN);
+  #endif
+  #ifdef Y2_LIMIT_PIN
+    SET_OUTPUT(Y2_LIMIT_PIN);
+  #endif
+  #ifdef Z1_LIMIT_PIN
+    SET_OUTPUT(Z1_LIMIT_PIN);
+  #endif
+  #ifdef Z2_LIMIT_PIN
+    SET_OUTPUT(Z2_LIMIT_PIN);
+  #endif
+
 }
 
 
@@ -58,18 +79,22 @@ void control_init() {
   // PPI = PWMfreq/(feedrate/25.4/60)
 
   //// air and aux assist control
-  ASSIST_DDR |= (1 << AIR_ASSIST_BIT);   // set as output pin
-  ASSIST_DDR |= (1 << AUX1_ASSIST_BIT);  // set as output pin
+  #ifdef AIR_ASSIST_PIN
+  SET_OUTPUT(AIR_ASSIST_PIN);
   control_air_assist(false);
+  #endif
+  #ifdef AUX1_ASSIST_PIN
+  SET_OUTPUT(AUX1_ASSIST_PIN);
   control_aux1_assist(false);
-  #ifdef DRIVEBOARD
-    ASSIST_DDR |= (1 << AUX2_ASSIST_BIT);  // set as output pin
-    control_aux2_assist(false);
-  #else  
-    //// limits overwrite control
-    LIMITS_OVERWRITE_DDR |= 1<<LIMITS_OVERWRITE_BIT; // define as output pin
-    control_limits_overwrite(true); // do not use hardware logic to stop steppers 
-  #endif  
+  #endif
+  #ifdef AUX2_ASSIST_PIN
+  SET_OUTPUT(AUX2_ASSIST_PIN);
+  control_aux2_assist(false);
+  #endif
+  #ifdef LIMITS_OVERWRITE_PIN
+  SET_OUTPUT(LIMITS_OVERWRITE_PIN);
+  control_limits_overwrite(true);
+  #endif
 }
 
 
@@ -78,39 +103,26 @@ void control_laser_intensity(uint8_t intensity) {
 }
 
 
-
-void control_air_assist(bool enable) {
-  if (enable) {
-    ASSIST_PORT |= (1 << AIR_ASSIST_BIT);
-  } else {
-    ASSIST_PORT &= ~(1 << AIR_ASSIST_BIT);
-  }
-}
-
-void control_aux1_assist(bool enable) {
-  if (enable) {
-    ASSIST_PORT |= (1 << AUX1_ASSIST_BIT);
-  } else {
-    ASSIST_PORT &= ~(1 << AUX1_ASSIST_BIT);
-  }  
-}
-
-#ifdef DRIVEBOARD
-  void control_aux2_assist(bool enable) {
-    if (enable) {
-      ASSIST_PORT |= (1 << AUX2_ASSIST_BIT);
-    } else {
-      ASSIST_PORT &= ~(1 << AUX2_ASSIST_BIT);
-    }  
-  }
-#else
-  void control_limits_overwrite(bool enable) {
-    if (enable) {
-      // sinking the pin overwrites the limit stop hard logic
-      LIMITS_OVERWRITE_PORT &= ~(1<<LIMITS_OVERWRITE_BIT);
-    } else {
-      LIMITS_OVERWRITE_PORT |= (1<<LIMITS_OVERWRITE_BIT);
-    }
+#ifdef AIR_ASSIST_PIN
+  void control_air_assist(bool enable) {
+    WRITE(AIR_ASSIST_PIN, enable);
   }
 #endif
 
+#ifdef AUX1_ASSIST_PIN
+  void control_aux1_assist(bool enable) {
+    WRITE(AUX1_ASSIST_PIN, enable);
+  }
+#endif
+
+#ifdef AUX2_ASSIST_PIN
+  void control_aux2_assist(bool enable) {
+    WRITE(AUX2_ASSIST_PIN, enable);
+  }
+#endif
+
+#ifdef LIMITS_OVERWRITE_PIN
+  void control_limits_overwrite(bool enable) {
+    WRITE(LIMITS_OVERWRITE_PIN, ~enable);
+  }
+#endif

@@ -1,5 +1,4 @@
 
-
 Beam Dynamics Contemplations
 -----------------------------
 

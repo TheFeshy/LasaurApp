@@ -8,7 +8,7 @@
 
   Inspired by the wiring_serial module by David A. Mellis which
   used to be a part of the Arduino project.
-   
+
   LasaurGrbl is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -19,6 +19,9 @@
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
 */
+
+//TODO: Make the serial port configurable, as the AT328p and AT2560 have
+//      different port numbers (because the 2560 has four serial ports)
 
 #include <avr/interrupt.h>
 #include <util/atomic.h>
@@ -81,19 +84,19 @@ static void set_baud_rate(long baud) {
 
 void serial_init() {
   set_baud_rate(BAUD_RATE);
-  
+
 	/* baud doubler off  - Only needed on Uno XXX */
   UCSR0A &= ~(1 << U2X0);
-          
+
 	// enable rx and tx
   UCSR0B |= 1<<RXEN0;
   UCSR0B |= 1<<TXEN0;
-	
+
 	// enable interrupt on complete reception of a byte
   UCSR0B |= 1<<RXCIE0;
-	  
+
 	// defaults to 8-bit, no parity, 1 stop bit
-	
+
   printPgmString(PSTR("# LasaurGrbl " LASAURGRBL_VERSION));
   printPgmString(PSTR("\n"));
 }
@@ -113,25 +116,25 @@ void serial_write(uint8_t data) {
     // Store data and advance head
     tx_buffer[tx_buffer_head] = data;
     tx_buffer_head = next_head;
-    
-  	UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt  
+
+  	UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt
 }
 
 // tx interrupt, called when UDR0 gets empty
-SIGNAL(USART_UDRE_vect) {
+SIGNAL(USART0_UDRE_vect) {
   uint8_t tail = tx_buffer_tail;  // optimize for volatile
-  
+
   if (send_ready_flag) {    // request another chunk of data
     UDR0 = CHAR_READY;
     send_ready_flag = 0;
-  } else {                    // Send a byte from the buffer 
+  } else {                    // Send a byte from the buffer
     UDR0 = tx_buffer[tail];
     if (++tail == TX_BUFFER_SIZE) {tail = 0;}  // increment
     tx_buffer_tail = tail;
   }
-  
+
   // disable tx interrupt, if buffer empty
-  if (tail == tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }  
+  if (tail == tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }
 }
 
 
@@ -148,17 +151,17 @@ uint8_t serial_read() {
     if (rx_buffer_open_slots == RX_CHUNK_SIZE) {  // enough slots opening up
       if (request_ready_flag) {
         send_ready_flag = 1;
-        UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt  
+        UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt
         request_ready_flag = 0;
       }
-    }    
+    }
     rx_buffer_open_slots++;
   }
 	return data;
 }
 
 // rx interrupt, called whenever a new byte is in UDR0
-SIGNAL(USART_RX_vect) {
+SIGNAL(USART0_RX_vect) {
   uint8_t data = UDR0;
   if (data == CHAR_STOP) {
     // special stop character, bypass buffer
@@ -169,13 +172,13 @@ SIGNAL(USART_RX_vect) {
   } else if (data == CHAR_REQUEST_READY) {
     if (rx_buffer_open_slots > RX_CHUNK_SIZE) {
       send_ready_flag = 1;
-      UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt 
+      UCSR0B |=  (1 << UDRIE0);  // enable tx interrupt
     } else {
       // send ready when enough slots open up
       request_ready_flag = 1;
     }
   } else {
-    uint8_t head = rx_buffer_head;  // optimize for volatile    
+    uint8_t head = rx_buffer_head;  // optimize for volatile
     uint8_t next_head = head + 1;
     if (next_head == RX_BUFFER_SIZE) {next_head = 0;}
 
@@ -247,13 +250,13 @@ void printFloat(double n) {
     n = -n;
   }
   n += 0.5/1000; // Add rounding factor
- 
+
   long integer_part;
   integer_part = (int)n;
   printIntegerInBase(integer_part,10);
-  
+
   serial_write('.');
-  
+
   n -= integer_part;
   int decimals = 3;
   uint8_t decimal_part;
@@ -264,4 +267,3 @@ void printFloat(double n) {
     n -= decimal_part;
   }
 }
-
