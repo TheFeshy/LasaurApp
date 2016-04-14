@@ -85,8 +85,6 @@ static bool acceleration_tick();
 static void adjust_speed( uint32_t steps_per_minute );
 static uint32_t config_step_timer(uint32_t cycles);
 
-
-
 // Initialize and start the stepper motor subsystem
 void stepper_init() {
   // Configure directions of interface pins
@@ -145,6 +143,17 @@ void stepper_init() {
   stop_status = STATUS_OK;
   busy = false;
 
+  //Enable stepper drivers
+  #ifdef X_ENABLE_PIN
+    WRITE(X_ENABLE_PIN, 0);
+  #endif
+  #ifdef Y_ENABLE_PIN
+    WRITE(Y_ENABLE_PIN, 0);
+  #endif
+  #ifdef Z_ENABLE_PIN
+    WRITE(Z_ENABLE_PIN, 0);
+  #endif
+
   // start in the idle state
   // The stepper interrupt gets started when blocks are being added.
   stepper_go_idle();
@@ -194,16 +203,6 @@ void stepper_wake_up() {
     processing_flag = true;
     // Initialize stepper output bits
     out_bits = OUTBITS_INVERT_MASK;
-    // Enable stepper drivers
-    #ifdef X_ENABLE_PIN
-      WRITE(X_ENABLE_PIN, 1);
-    #endif
-    #ifdef Y_ENABLE_PIN
-      WRITE(Y_ENABLE_PIN, 1);
-    #endif
-    #ifdef Z_ENABLE_PIN
-      WRITE(Z_ENABLE_PIN, 1);
-    #endif
     // Enable stepper driver interrupt
     TIMSK1 |= (1<<OCIE1A);
   }
@@ -217,16 +216,6 @@ void stepper_go_idle() {
   // Disable stepper driver interrupt
   TIMSK1 &= ~(1<<OCIE1A);
   control_laser_intensity(0);
-  // Disable stepper drivers
-  #ifdef X_ENABLE_PIN
-    WRITE(X_ENABLE_PIN, 1);
-  #endif
-  #ifdef Y_ENABLE_PIN
-    WRITE(Y_ENABLE_PIN, 1);
-  #endif
-  #ifdef Z_ENABLE_PIN
-    WRITE(Z_ENABLE_PIN, 1);
-  #endif
 }
 
 // stop event handling
