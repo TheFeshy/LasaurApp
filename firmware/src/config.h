@@ -31,7 +31,8 @@
 // #define DEBUG_IGNORE_SENSORS  // set for debugging
 
 //#include "control_board/lasersaur_driveboard.h"
-#include "control_board/ramps_1.4.h"
+//#include "control_board/ramps_1.4.h"
+#include "control_board/mikes_board.h"
 
 #include "laser_table/mikes_table.h"
 //#include "laser_table/lasersaur_v1401.h"

@@ -12,7 +12,7 @@
 /*****************************************************************************
 These are the standard RAMPS pins from their documentation.
 They are included here for reference.  The settings used by lasersaur
-are below; please skip down to the next section to change the configuration
+are below.
 ******************************************************************************
 #define X_STEP_PIN         54
 #define X_DIR_PIN          55
@@ -56,7 +56,7 @@ are below; please skip down to the next section to change the configuration
 */
 
 /******************************************************************************
-Below are the pin definitions used by lasersaur.  Commented pins are optional.
+Below are the pin definitions used by lasersaur.
 ******************************************************************************/
 //#define POWER_PIN     //No default on RAMPS
 //#define CHILLER_PIN   //No default on RAMPS
@@ -72,27 +72,16 @@ Below are the pin definitions used by lasersaur.  Commented pins are optional.
                                    //pin that is attached to the disable pin of
                                    //the cutoff hardware. Outputs 0 to disable.
 
-#define X_STEP_PIN              54
-#define X_DIRECTION_PIN         55
-#define X_ENABLE_PIN            38
-#define X1_LIMIT_PIN            3
-//#define X2_LIMIT_PIN            2 //This pin is optional, and is the far
-                                    //(non-home) stop.
 
-#define Y_STEP_PIN              60
-#define Y_DIRECTION_PIN         61
-#define Y_ENABLE_PIN            56
-#define Y1_LIMIT_PIN            14
-//#define Y2_LIMIT_PIN           15 //This pin is optional, and is the far
-                                    //(non-home) stop.
 
-//The entire z-axis is optional, and may not even work with lasersaur.
-//Note: It appears that the z "home" code is disabled in current lasersaur.
-//#define Z_STEP_PIN              46
-//#define Z_DIRECTION_PIN         48
-//#define Z_ENABLE_PIN            62
-//#define Z1_LIMIT_PIN            18
-//#define Z2_LIMIT_PIN            19
+#define X_STEP_PIN              26  //E Axis
+#define X_DIRECTION_PIN         28
+#define X_ENABLE_PIN            24
 
+#define Y_STEP_PIN              36  //Q Axis
+#define Y_DIRECTION_PIN         34
+#define Y_ENABLE_PIN            30
+#define X1_LIMIT_PIN            3   //x1_limit
+#define Y1_LIMIT_PIN            14  //y2_limit
 
 #endif //include guard
