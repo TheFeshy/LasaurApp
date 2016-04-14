@@ -70,7 +70,7 @@ Below are the pin definitions used by lasersaur.
                                    //make them hardware?), and if you want the
                                    //firmware to disable them, set this to the
                                    //pin that is attached to the disable pin of
-                                   //the cutoff hardware. Outputs 0 to disable.
+/* Mike's changes!                                   //the cutoff hardware. Outputs 0 to disable.
 #define X1_LIMIT_PIN            3  //This pin MUST be defined, and is the X
                                    //minimum (home stop)
 //#define X2_LIMIT_PIN            2
@@ -80,7 +80,7 @@ Below are the pin definitions used by lasersaur.
 //#define Z1_LIMIT_PIN            18
 //#define Z2_LIMIT_PIN            19
 
-/* These are the RAMPS 1.4 defaults.
+/ These are the RAMPS 1.4 defaults.
 TODO:D make a "mike's board" that imports these correct values, then changes
 them to match what he has!
 
@@ -100,10 +100,12 @@ them to match what he has!
 
 #define X_STEP_PIN              26
 #define X_DIRECTION_PIN         28
-#define X_ENABLE_PIN            38
+#define X_ENABLE_PIN            24
 
 #define Y_STEP_PIN              36
 #define Y_DIRECTION_PIN         34
-#define Y_ENABLE_PIN            56
+#define Y_ENABLE_PIN            30
+#define X1_LIMIT_PIN            3
+#define Y1_LIMIT_PIN            14
 
 #endif //include guard

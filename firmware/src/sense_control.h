@@ -26,8 +26,8 @@
 void sense_init();
 
 //For now at least X and Y limits are necessary for homing!
-#define SENSE_X1_LIMIT !(READ(X1_LIMIT_PIN))
-#define SENSE_Y1_LIMIT !(READ(Y1_LIMIT_PIN))
+#define SENSE_X1_LIMIT (READ(X1_LIMIT_PIN))
+#define SENSE_Y1_LIMIT (READ(Y1_LIMIT_PIN))
 
 #ifndef X2_LIMIT_PIN
   #define SENSE_X2_LIMIT 0
