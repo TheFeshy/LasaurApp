@@ -3,8 +3,8 @@
 This file is for configuring table-specifc values.
 ******************************************************************************/
 
-#define CONFIG_X_STEPS_PER_MM 88.88888888 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
-#define CONFIG_Y_STEPS_PER_MM 90.90909090 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
+#define CONFIG_X_STEPS_PER_MM 78.6 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
+#define CONFIG_Y_STEPS_PER_MM 78.6 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
 #define CONFIG_Z_STEPS_PER_MM 33.33333333 //microsteps/mm (no integers, e.g. use 80.0 instead of 80)
 
 #define CONFIG_PULSE_MICROSECONDS 5
