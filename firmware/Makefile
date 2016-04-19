@@ -31,7 +31,7 @@
 DEVICE     ?= atmega2560
 CLOCK      = 16000000
 PROGRAMMER ?= -c avrisp2 -P usb
-SOURCE    = gcode.c main.c planner.c sense_control.c stepper.c serial.c
+SOURCE    = gcode.c main.c planner.c sense_control.c stepper.c serial.c laser.c
 BUILDDIR = build
 SOURCEDIR = src
 # FUSES      = -U hfuse:w:0xd9:m -U lfuse:w:0x24:m

@@ -19,8 +19,8 @@ TESTED, and YOU ASSUME ALL LIABILITY IF YOU TEST THIS CODE.
 
 #define POWER_PIN             2
 #define CHILLER_PIN           3
-//#define DOOR_PIN              2; TODO: in 14.11, this was defined the same
-                                //as POWER_BIT if the driveboard was defined
+//#define DOOR_PIN
+
 #define AIR_ASSIST_PIN        4 //enabled/diabled by gcode m80/m81
 #define AUX1_ASSIST_PIN       7 //enabled/disabled by gcode m82/m83
 #define AUX2_ASSIST_PIN       5 //enabled/disabled by gcode m84/m85
@@ -52,5 +52,15 @@ TESTED, and YOU ASSUME ALL LIABILITY IF YOU TEST THIS CODE.
 #define Z_STEP_PIN              10
 #define Z_DIRECTION_PIN         13
 //#define Z_ENABLE_PIN          The lasersaur driveboard does not use enable pin
+
+#define LASER_PIN               6  // OC0A
+#define LASER_TIMER             TCCR0 //Timer register that is used by the PWM
+                                   //pin defined above.  Note that timers 1 and
+                                   //2 are used by lasersaur internally to drive
+                                   //steppers and sensors.
+#define PWM_LASER_CONTROL       1  //Allow the firmware to adjsut the laser
+                                   //power via PWM.  This is the default.
+                                   //Comment out this line to reduce laser
+                                   //control to a simple on/off.
 
 #endif //include guards

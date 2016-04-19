@@ -84,4 +84,19 @@ Below are the pin definitions used by lasersaur.
 #define X1_LIMIT_PIN            3   //x1_limit
 #define Y1_LIMIT_PIN            14  //y2_limit
 
+#define LASER_OUTPUT_COMPARE      OCR4AL //Timer register that drives PWM control
+#define LASER_COMPARE_MODE        COM4A1 //This sets both the compare mode and
+                                         //which pins are attached to the timer
+                                         //as PWM.  It should be COMnx1, where
+                                         //n and x match the PWM register.
+#define LASER_FIRE_PIN            5 //Pin for on/off laser control
+#define LASER_PWM_PIN             6 //Pin for PWM laser control
+#define LASER_TIMER_A             TCCR4A
+#define LASER_TIMER_B             TCCR4B
+//#define PWM_LASER_CONTROL       1  //Allow the firmware to adjsut the laser
+                                   //power via PWM.  This is the default.
+                                   //Comment out this line to reduce laser
+                                   //control to a simple on/off.
+#define INVERT_LASER_LOGIC         //Is your laser pull-up or pull-down? Change
+                                   //this to adjust.
 #endif //include guard

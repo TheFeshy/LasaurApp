@@ -6,7 +6,8 @@
 #ifndef	_FASTIO_ARDUINO_H
 #define	_FASTIO_ARDUINO_H
 
-//#include <avr/io.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 /*
   utility functions

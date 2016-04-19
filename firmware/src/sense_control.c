@@ -23,6 +23,7 @@
 #include "stepper.h"
 #include "planner.h"
 #include "fastio.h"
+#include "laser.h"
 
 
 
@@ -58,26 +59,7 @@ void sense_init() {
 
 
 void control_init() {
-  //// laser control
-  // Setup Timer0 for a 488.28125Hz "phase correct PWM" wave (assuming a 16Mhz clock)
-  // Timer0 can pwm either PD5 (OC0B) or PD6 (OC0A), we use PD6
-  // TCCR0A and TCCR0B are the registers to setup Timer0
-  // see chapter "8-bit Timer/Counter0 with PWM" in Atmga328 specs
-  // OCR0A sets the duty cycle 0-255 corresponding to 0-100%
-  // also see: http://arduino.cc/en/Tutorial/SecretsOfArduinoPWM
-  DDRD |= (1 << DDD6);      // set PD6 as an output
-  OCR0A = 0;              // set PWM to a 0% duty cycle
-  TCCR0A = _BV(COM0A1) | _BV(WGM00);   // phase correct PWM mode
-  // TCCR0A = _BV(COM0A1) | _BV(WGM01) | _BV(WGM00);  // fast PWM mode
-  // prescaler: PWMfreq = 16000/(2*256*prescaler)
-  // TCCR0B = _BV(CS00);                // 1 => 31.3kHz
-  // TCCR0B = _BV(CS01);                // 8 => 3.9kHz
-  TCCR0B = _BV(CS01) | _BV(CS00);    // 64 => 489Hz
-  // TCCR0B = _BV(CS02);                // 256 => 122Hz
-  // TCCR0B = _BV(CS02) | _BV(CS00);    // 1024 => 31Hz
-  // NOTES:
-  // PPI = PWMfreq/(feedrate/25.4/60)
-
+  laser_init();
   //// air and aux assist control
   #ifdef AIR_ASSIST_PIN
   SET_OUTPUT(AIR_ASSIST_PIN);
@@ -95,11 +77,6 @@ void control_init() {
   SET_OUTPUT(LIMITS_OVERWRITE_PIN);
   control_limits_overwrite(true);
   #endif
-}
-
-
-void control_laser_intensity(uint8_t intensity) {
-  OCR0A = intensity;
 }
 
 
