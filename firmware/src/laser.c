@@ -55,8 +55,6 @@ void control_laser_intensity_PWM(uint8_t intensity) {
   /////////////////////////////////////////////////////////////////////////////
   // This is the section to control laser output by PWM.  There is also
   // a simpler "on/off" control method below.
-    //TODO: Check for laser invert logic here, or our intensities will be
-    //semi-backwards (pulse frequency will increase but duty cycle decrease)
   LASER_OUTPUT_COMPARE = intensity;
   // depending on intensity adapt PWM freq
   // assuming: TCCR0A = _BV(COM0A1) | _BV(WGM00);  // phase correct PWM mode

@@ -31,13 +31,13 @@ void sense_init() {
   //// chiller, door, (power)
   //SENSE_DDR &= ~(SENSE_MASK);  // set as input pins
   #ifdef DOOR_PIN
-    SET_INPUT(DOOR_PIN)
+    SET_INPUT(DOOR_PIN);
   #endif
   #ifdef POWER_PIN
-    SET_INPUT(POWER_PIN)
+    SET_INPUT(POWER_PIN);
   #endif
   #ifdef CHILLER_PIN
-    SET_INPUT(CHILLER_PIN)
+    SET_INPUT(CHILLER_PIN);
   #endif
 
   SET_INPUT(X1_LIMIT_PIN);

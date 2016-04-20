@@ -13,9 +13,7 @@ TESTED, and YOU ASSUME ALL LIABILITY IF YOU TEST THIS CODE.
 #define lasersaur_driveboard
 #define CONTROL_BOARD "lasersaur_driveboard"
 
-#incude "../fastio.h"
-
-//TODO:D Include guards that block other control_board files!
+#include "../fastio.h"
 
 #define POWER_PIN             2
 #define CHILLER_PIN           3
@@ -53,14 +51,21 @@ TESTED, and YOU ASSUME ALL LIABILITY IF YOU TEST THIS CODE.
 #define Z_DIRECTION_PIN         13
 //#define Z_ENABLE_PIN          The lasersaur driveboard does not use enable pin
 
-#define LASER_PIN               6  // OC0A
-#define LASER_TIMER             TCCR0 //Timer register that is used by the PWM
-                                   //pin defined above.  Note that timers 1 and
-                                   //2 are used by lasersaur internally to drive
-                                   //steppers and sensors.
+
+#define LASER_OUTPUT_COMPARE      OCR0 //Timer register that drives PWM control
+#define LASER_COMPARE_MODE        COM0A1 //This sets both the compare mode and
+                                         //which pins are attached to the timer
+                                         //as PWM.  It should be COMnx1, where
+                                         //n and x match the PWM register.
+//#define LASER_FIRE_PIN            5 //Pin for on/off laser control
+#define LASER_PWM_PIN             6 //Pin for PWM laser control
+#define LASER_TIMER_A             TCCR0A
+#define LASER_TIMER_B             TCCR0B
 #define PWM_LASER_CONTROL       1  //Allow the firmware to adjsut the laser
                                    //power via PWM.  This is the default.
                                    //Comment out this line to reduce laser
                                    //control to a simple on/off.
+#define INVERT_LASER_LOGIC         //Is your laser pull-up or pull-down? Change
+                                   //this to adjust.
 
 #endif //include guards
