@@ -42,6 +42,17 @@ settings for but no home support for some reason), door sensors, etc.
 It compiles with avr-gcc.  If you've got the technical know-how to evaluate if
 this firmware is for you, you should be able to take it from there.
 
+## How tested is this?
+
+On Mike's custom built board, it homes, moves and appears to fire the laser as
+it should.  On anything else it is completely untested.  It likely doesn't even
+compile for non-RAMPS boards, and many many features have not been tested.
+
+## The laser has malfunctioned and is melting my face
+
+Worry not!  That large disclaimer at the very top has almost certainly
+indemnified me from any harm.
+
 ## See also
 
 [grbl](http://github.com/grbl/grbl)
