@@ -29,7 +29,13 @@ void laser_init(){
   // TCCR0A = _BV(COM0A1) | _BV(WGM00);   // phase correct PWM mode
   // TCCR0A = _BV(COM0A1) | _BV(WGM01) | _BV(WGM00);  // fast PWM mode
   #ifdef LASER_PWM_PIN
-    LASER_TIMER_A = _BV(LASER_COMPARE_MODE) | _BV(WGM40);   // phase correct PWM mode
+    #ifdef INVERT_LASER_LOGIC
+      #define COMPARE_OUTPUT_MODE _BV(WGM00) // clear OCnx on up count, set on down
+                                        // this assumes fire on pull-down
+    #else
+      #define COMPARE_OUTPUT_MODE _BV(WGM00) | _BV(WGM01)
+    #endif
+    LASER_TIMER_A = _BV(LASER_COMPARE_MODE) | COMPARE_OUTPUT_MODE;   // phase correct PWM mode
     LASER_TIMER_B = _BV(CS01) | _BV(CS00);    // 64 => 489Hz
     SET_OUTPUT(LASER_PWM_PIN);
   #endif
