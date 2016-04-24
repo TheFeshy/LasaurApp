@@ -241,7 +241,7 @@ void gcode_process_line() {
       if (SENSE_CHILLER_OFF) {
         printString("C");  // Warning: Chiller is off
       }
-      #ifndef DRIVEBOARD
+      #ifdef POWER_PIN
         // power
         if (SENSE_POWER_OFF) {
           printString("P"); // Power Off

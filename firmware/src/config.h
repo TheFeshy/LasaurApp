@@ -28,6 +28,7 @@
 #define LASAURGRBL_VERSION "14.11r"
 
 #define BAUD_RATE 57600
+//#define BAUD_RATE 115200
 // #define DEBUG_IGNORE_SENSORS  // set for debugging
 
 //#include "control_board/lasaur_driveboard.h"

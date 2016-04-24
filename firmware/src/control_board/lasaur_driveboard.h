@@ -69,3 +69,15 @@ TESTED, and YOU ASSUME ALL LIABILITY IF YOU TEST THIS CODE.
                                    //this to adjust.
 
 #endif //include guards
+
+/******************************************************************************
+Memory tweaks and configuration
+******************************************************************************/
+// The number of linear motions that can be in the plan at any give time
+// (The block buffer is make of block_t, currently about 72 bytes.  So memory
+//  use of this parameter is BLOCK_BUFFER_SIZE * 72)
+#define BLOCK_BUFFER_SIZE 16  // do not make bigger than uint8_t
+
+//Size of the serial protocol buffer (in bytes)
+#define RX_BUFFER_SIZE 255
+#define TX_BUFFER_SIZE 128

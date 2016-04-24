@@ -85,13 +85,13 @@ void control_air_assist(bool enable);
 void control_aux1_assist(bool enable);
 
 
-#ifdef DRIVEBOARD
+#ifdef AUX2_ASSIST_PIN
   void control_aux2_assist(bool enable);
-#else
-  // dis/enable if steppers can still
-  // move when a limit switch is triggering
-  void control_limits_overwrite(bool enable);
 #endif
+
+// dis/enable if steppers can still
+// move when a limit switch is triggering
+void control_limits_overwrite(bool enable);
 
 
 #endif

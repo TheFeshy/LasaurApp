@@ -46,8 +46,6 @@
 * buffer write: if(!full) {buf[head] = item}     *
 * buffer read:  if(!empty) {return buf[tail]}    *
 *************************************************/
-#define RX_BUFFER_SIZE 255
-#define TX_BUFFER_SIZE 128
 uint8_t rx_buffer[RX_BUFFER_SIZE];
 volatile uint8_t rx_buffer_head = 0;
 volatile uint8_t rx_buffer_tail = 0;
